@@ -1,0 +1,7 @@
+interface:
+  display_name: "Windows PowerShell Encoding"
+  short_description: "Avoid UTF-8 and mojibake pitfalls on Windows"
+  default_prompt: "Use $windows-powershell-encoding-skill to inspect this Windows PowerShell workflow for UTF-8, CJK, and mojibake risks."
+
+policy:
+  allow_implicit_invocation: true

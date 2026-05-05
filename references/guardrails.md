@@ -13,6 +13,7 @@ The dangerous case is not merely ugly output. The dangerous case is using that m
 - Do not use `Get-Content` output displayed in the terminal as proof that a UTF-8 file is correct.
 - Do not continue after seeing `???`, `�`, or mojibake in text that may be saved or published.
 - Do not put raw Chinese/CJK text in PowerShell inline commands, heredocs, or `.ps1` source.
+- Do not use `>`, `>>`, `Out-File`, `Set-Content`, or `Add-Content` to write localized text unless the encoding is explicit and the result is verified outside terminal rendering.
 - Prefer UTF-8 files as the boundary for localized content.
 - Prefer ASCII-only `.ps1` source and decode localized strings at runtime only when needed.
 
@@ -38,6 +39,20 @@ Write UTF-8 text explicitly:
 
 ```powershell
 Set-Content -LiteralPath $path -Value $text -Encoding utf8
+```
+
+Append UTF-8 text explicitly:
+
+```powershell
+Add-Content -LiteralPath $path -Value $text -Encoding utf8
+```
+
+Avoid ambiguous redirection for localized text:
+
+```powershell
+# Avoid for CJK/localized text:
+# "..." > file.txt
+# "..." >> file.txt
 ```
 
 For Windows PowerShell 5.1, be aware that `-Encoding utf8` writes UTF-8 with BOM. That is often acceptable for data files, but project conventions may differ. If exact BOM-less UTF-8 is required, use a runtime or API that can specify BOM-less UTF-8 explicitly.
@@ -69,18 +84,20 @@ Stop and re-check before writing or committing when any of these appear:
 - mojibake patterns after reading a known UTF-8 file
 - non-ASCII text copied through a PowerShell inline command
 - a `.ps1` file that contains direct localized strings
+- localized text written with `>`, `>>`, `Out-File`, `Set-Content`, or `Add-Content` without an explicit encoding and verification step
 - browser automation that pastes text captured from terminal output
 
 ## Portable Check
 
-This skill includes `scripts/assert-no-nonascii-ps1.ps1`. Run it from a repo root to fail if any `.ps1` file contains non-ASCII bytes:
+This skill includes `scripts/assert-no-nonascii-ps1.ps1`. Run it from a repo root to fail if PowerShell source files contain non-ASCII bytes:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1
 ```
 
-Run it with explicit roots:
+Run it with explicit roots or extensions:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1 -Path .\tools, .\scripts
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1 -Extension .ps1, .psm1, .psd1
 ```

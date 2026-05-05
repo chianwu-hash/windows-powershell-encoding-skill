@@ -1,5 +1,6 @@
 param(
-    [string[]]$Path = @(".")
+    [string[]]$Path = @("."),
+    [string[]]$Extension = @(".ps1", ".psm1", ".psd1")
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,7 +12,8 @@ foreach ($root in $Path) {
         Write-Error "Path not found: $root"
     }
 
-    $items = Get-ChildItem -LiteralPath $root -Recurse -File -Filter "*.ps1" -Force
+    $items = Get-ChildItem -LiteralPath $root -Recurse -File -Force |
+        Where-Object { $Extension -contains $_.Extension.ToLowerInvariant() }
     foreach ($item in $items) {
         $bytes = [System.IO.File]::ReadAllBytes($item.FullName)
         $bad = $false
@@ -29,11 +31,11 @@ foreach ($root in $Path) {
 }
 
 if ($failed.Count -gt 0) {
-    Write-Host "Non-ASCII bytes found in PowerShell source files:" -ForegroundColor Red
+    Write-Host "Non-ASCII bytes found in checked shell source files:" -ForegroundColor Red
     foreach ($file in $failed) {
         Write-Host "  $file" -ForegroundColor Red
     }
     exit 1
 }
 
-Write-Host "OK: all PowerShell source files are ASCII-only."
+Write-Host "OK: all checked shell source files are ASCII-only."

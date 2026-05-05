@@ -13,9 +13,10 @@ Use this skill as a guardrail whenever Windows, PowerShell, Codex tool execution
 - Do not use terminal-rendered Chinese/CJK text as the final source of truth.
 - Verify non-ASCII text through UTF-8 files, browser/page rendering, screenshots, structured parser output, or `git diff`.
 - Keep `.ps1` source files ASCII-only when practical.
-- Do not put raw Chinese/CJK literals into PowerShell inline scripts, heredocs, or generated `.ps1` files.
+- Do not put raw Chinese/CJK literals into PowerShell inline scripts, heredocs, generated `.ps1` files, or shell redirections.
 - Put non-ASCII content in UTF-8 data files, or encode it in an ASCII-safe form such as Base64 or `\uXXXX` escapes and decode at runtime.
 - When reading or writing text files from scripts, specify UTF-8 explicitly.
+- Avoid `>`, `>>`, `Out-File`, `Set-Content`, and `Add-Content` for non-ASCII text unless encoding is explicit and verified.
 - If a terminal shows `???`, replacement characters, or mojibake, stop before saving, publishing, or committing any affected text.
 
 ## Preferred Patterns
@@ -38,16 +39,23 @@ For file edits:
 1. Prefer structured tools and patches over shell-generated text.
 2. Avoid PowerShell heredocs containing non-ASCII text.
 3. If a shell command must write text, write ASCII control code only and read non-ASCII payloads from UTF-8 files.
+4. Do not copy CJK text from terminal output back into source files, prompts, or browser fields.
 
 ## Validation
 
-If this skill includes `scripts/assert-no-nonascii-ps1.ps1`, run it from the project root before finishing PowerShell changes:
+If this skill includes `scripts/assert-no-nonascii-ps1.ps1`, run it from the project root before finishing PowerShell changes. Use the script from the skill directory, or copy it into the target project first:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1
 ```
 
 If the project has its own equivalent npm or CI command, use that command too.
+
+## Teacher-Facing Prompt
+
+When this skill is used in a teacher workshop or other non-engineer setting, prefer giving the learner a short prompt they can paste to their AI assistant.
+
+Use `references/teacher-ai-prompt.md` for that copy-paste version.
 
 ## More Detail
 

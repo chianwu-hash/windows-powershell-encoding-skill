@@ -2,6 +2,8 @@
 
 請在這個 Windows 專案中遵守以下規則，避免中文內容在 PowerShell 或終端機中變成亂碼：
 
+執行 PowerShell 腳本時，請使用 PowerShell 7.6.1 以上版本的 `pwsh`，不要使用 Windows PowerShell 5.1 的 `powershell.exe`。
+
 1. 不要把 PowerShell 或終端機顯示出來的中文當成最終正確內容。
 2. 如果你看到亂碼、`???`、`�`，不要把那些文字複製回文件、提示語、瀏覽器或任何要保存的地方。
 3. 中文內容請以 VS Code 編輯器中的 UTF-8 文件、瀏覽器畫面、可靠的 diff，或能檢查實際 Unicode 內容的工具為準。

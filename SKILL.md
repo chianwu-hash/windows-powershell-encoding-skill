@@ -7,6 +7,14 @@ description: Avoid Unicode and UTF-8 corruption when Codex works on Windows with
 
 Use this skill as a guardrail whenever Windows, PowerShell, Codex tool execution, and non-ASCII text overlap.
 
+## Requirements
+
+- Use PowerShell 7.6.1 or newer for validation scripts and examples.
+- Invoke it as `pwsh`, not Windows PowerShell 5.1 (`powershell.exe`).
+- Treat Windows PowerShell 5.1 as a legacy compatibility target only.
+
+PowerShell 7.6.1 reduces many default encoding pitfalls by using UTF-8-oriented defaults, but it does not make terminal rendering, external tools, legacy Big5 files, or copy/paste workflows automatically safe.
+
 ## Core Rules
 
 - Treat Windows terminal output as an unreliable rendering layer for non-ASCII text.
@@ -46,7 +54,7 @@ For file edits:
 If this skill includes `scripts/assert-no-nonascii-ps1.ps1`, run it from the project root before finishing PowerShell changes. Use the script from the skill directory, or copy it into the target project first:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1
+pwsh -NoProfile -File .\scripts\assert-no-nonascii-ps1.ps1
 ```
 
 If the project has its own equivalent npm or CI command, use that command too.

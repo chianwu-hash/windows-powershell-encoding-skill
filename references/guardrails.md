@@ -6,6 +6,12 @@ On Windows, Codex may invoke PowerShell in a non-interactive process that does n
 
 The dangerous case is not merely ugly output. The dangerous case is using that mangled output as input for a later write, commit, prompt, browser automation step, or publish action.
 
+## Runtime Dependency
+
+Use PowerShell 7.6.1 or newer for this skill's validation scripts and examples. Invoke it as `pwsh`, not Windows PowerShell 5.1 (`powershell.exe`).
+
+PowerShell 7.6.1 reduces many default encoding pitfalls by using UTF-8-oriented defaults, but it does not make terminal rendering, external tools, legacy Big5 files, or copy/paste workflows automatically safe. Keep the guardrails below even when using `pwsh`.
+
 ## Rules
 
 - Treat PowerShell terminal rendering as a lossy display surface for non-ASCII text.
@@ -55,7 +61,7 @@ Avoid ambiguous redirection for localized text:
 # "..." >> file.txt
 ```
 
-For Windows PowerShell 5.1, be aware that `-Encoding utf8` writes UTF-8 with BOM. That is often acceptable for data files, but project conventions may differ. If exact BOM-less UTF-8 is required, use a runtime or API that can specify BOM-less UTF-8 explicitly.
+For legacy Windows PowerShell 5.1 compatibility checks, be aware that `-Encoding utf8` writes UTF-8 with BOM. Normal project work should use `pwsh` 7.6.1 or newer. If exact BOM-less UTF-8 is required, use a runtime or API that can specify BOM-less UTF-8 explicitly.
 
 Decode small embedded strings from Base64:
 
@@ -92,12 +98,12 @@ Stop and re-check before writing or committing when any of these appear:
 This skill includes `scripts/assert-no-nonascii-ps1.ps1`. Run it from a repo root to fail if PowerShell source files contain non-ASCII bytes:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1
+pwsh -NoProfile -File .\scripts\assert-no-nonascii-ps1.ps1
 ```
 
 Run it with explicit roots or extensions:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1 -Path .\tools, .\scripts
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\assert-no-nonascii-ps1.ps1 -Extension .ps1, .psm1, .psd1
+pwsh -NoProfile -File .\scripts\assert-no-nonascii-ps1.ps1 -Path .\tools, .\scripts
+pwsh -NoProfile -File .\scripts\assert-no-nonascii-ps1.ps1 -Extension .ps1, .psm1, .psd1
 ```

@@ -3,7 +3,14 @@ param(
     [string[]]$Extension = @(".ps1", ".psm1", ".psd1")
 )
 
+#requires -Version 7.6
+
 $ErrorActionPreference = "Stop"
+
+$minimumPwshVersion = [version]"7.6.1"
+if ($PSVersionTable.PSEdition -ne "Core" -or $PSVersionTable.PSVersion -lt $minimumPwshVersion) {
+    throw "PowerShell $minimumPwshVersion or newer is required. Run this script with pwsh."
+}
 
 $failed = New-Object System.Collections.Generic.List[string]
 

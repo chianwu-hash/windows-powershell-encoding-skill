@@ -8,11 +8,19 @@ The dangerous case is not merely ugly output. The dangerous case is using that m
 
 ## Runtime Dependency
 
-Use PowerShell 7.6.1 or newer for this skill's validation scripts and examples. Invoke it as `pwsh`, not Windows PowerShell 5.1 (`powershell.exe`).
+Use PowerShell 7.6.1 or newer for this skill's validation scripts and examples. On Windows AI/CJK workflows, depend on the MSI installation when available. Invoke it as `pwsh`, preferably from `C:\Program Files\PowerShell\7\pwsh.exe`, not Windows PowerShell 5.1 (`powershell.exe`) and not a Microsoft Store / MSIX `WindowsApps` package for automation.
 
 PowerShell 7.6.1 reduces many default encoding pitfalls by using UTF-8-oriented defaults, but it does not make terminal rendering, external tools, legacy Big5 files, or copy/paste workflows automatically safe. Keep the guardrails below even when using `pwsh`.
 
-Strongly recommend PowerShell 7.6.1+ to users who will process Chinese/CJK files or run AI-generated PowerShell on Windows. Windows PowerShell 5.1 should be treated as a legacy compatibility target.
+Strongly recommend PowerShell 7.6.1+ MSI to users who will process Chinese/CJK files or run AI-generated PowerShell on Windows. Windows PowerShell 5.1 should be treated as a legacy compatibility target. Microsoft Store / MSIX PowerShell is acceptable for casual interactive use or when policy requires it, but it is not this skill's default for Codex, automation, or cross-tool CJK workflows.
+
+Preferred MSI install command:
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget --installer-type wix
+```
+
+Plain `winget install --id Microsoft.PowerShell --source winget` can install MSIX on current Windows releases. Specify `--installer-type wix` when the goal is the MSI route.
 
 ## Environment Split
 
@@ -22,6 +30,8 @@ Run:
 
 ```powershell
 $PSVersionTable.PSVersion
+$PSHOME
+(Get-Command pwsh).Source
 [Console]::InputEncoding
 [Console]::OutputEncoding
 $OutputEncoding
@@ -29,7 +39,8 @@ $OutputEncoding
 
 Use the result this way:
 
-- `pwsh` 7.6.1+: recommended. Default file writes and PowerShell redirection are generally UTF-8-oriented, but native-command boundaries, terminal rendering, old Big5 data, and copy/paste are still risk areas.
+- PowerShell 7.6.1+ MSI: recommended. It normally lives under `C:\Program Files\PowerShell\7`. Default file writes and PowerShell redirection are generally UTF-8-oriented, but native-command boundaries, terminal rendering, old Big5 data, and copy/paste are still risk areas.
+- PowerShell 7.6.1+ MSIX / Store: UTF-8 behavior is still PowerShell 7, but the packaged-app environment can affect paths, profiles, all-users settings, remoting, and automation assumptions. Treat `$PSHOME` or command paths under `WindowsApps` as an MSIX signal.
 - Windows PowerShell 5.1: high risk. Default `Set-Content` can use the system ANSI code page, `Out-File` and redirection can write UTF-16LE, and `$OutputEncoding` may affect native-command communication differently from file cmdlets.
 - Git Bash: often UTF-8-friendly, but calling Windows-native tools can cross back into Windows code page behavior.
 - WSL: usually the cleanest UTF-8 environment, but invoking Windows executables or moving text across the WSL/Windows boundary reintroduces Windows encoding risk.
@@ -125,9 +136,10 @@ When acting as Codex:
 3. Keep generated PowerShell source ASCII-only.
 4. Store non-ASCII payloads in separate UTF-8 files when the task needs localized text.
 5. Validate with exact checks, browser rendering, screenshots, or diffs.
-6. Prefer `pwsh` 7.6.1+ for validation and examples.
-7. Avoid Windows PowerShell 5.1 unless the user explicitly needs legacy compatibility.
-8. Mention any residual risk if the only available check was terminal output.
+6. Prefer PowerShell 7.6.1+ MSI for validation and examples.
+7. If the active `pwsh` is MSIX / Store, mention the packaging risk and avoid assuming all-users settings, remoting, or stable automation paths.
+8. Avoid Windows PowerShell 5.1 unless the user explicitly needs legacy compatibility.
+9. Mention any residual risk if the only available check was terminal output.
 
 ## Red Flags
 

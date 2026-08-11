@@ -56,10 +56,50 @@ function Test-FileWriteEncoding {
     }
 }
 
+function Get-PowerShellInstallKind {
+    $commandPath = ""
+    try {
+        $commandPath = (Get-Command pwsh -ErrorAction Stop).Source
+    } catch {
+        $commandPath = ""
+    }
+
+    if ($PSHOME -like "*\WindowsApps\*" -or $commandPath -like "*\WindowsApps\*") {
+        return "msix-or-store"
+    }
+
+    $msiHit = Get-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+        Where-Object {
+            ($_.DisplayName -like "PowerShell 7*" -or $_.DisplayName -like "Microsoft PowerShell*") -and
+            $_.UninstallString -like "*MsiExec*"
+        } |
+        Select-Object -First 1
+
+    if ($msiHit) {
+        return "msi"
+    }
+
+    if ($PSHOME -like "$env:ProgramFiles\PowerShell\7*" -or $commandPath -like "$env:ProgramFiles\PowerShell\7*") {
+        return "program-files-unknown-installer"
+    }
+
+    return "unknown"
+}
+
+$pwshCommandPath = ""
+try {
+    $pwshCommandPath = (Get-Command pwsh -ErrorAction Stop).Source
+} catch {
+    $pwshCommandPath = ""
+}
+
 $diagnostic = [ordered]@{
     timestampUtc = [DateTime]::UtcNow.ToString("o")
     psEdition = $PSVersionTable.PSEdition
     psVersion = $PSVersionTable.PSVersion.ToString()
+    psHome = $PSHOME
+    pwshCommandPath = $pwshCommandPath
+    installKind = Get-PowerShellInstallKind
     os = $PSVersionTable.OS
     culture = (Get-Culture).Name
     uiCulture = (Get-UICulture).Name
@@ -77,7 +117,8 @@ $diagnostic = [ordered]@{
     }
     fileWriteTest = Test-FileWriteEncoding
     guidance = [ordered]@{
-        recommendedShell = "pwsh 7.6.1+"
+        recommendedShell = "PowerShell 7.6.1+ MSI via winget --installer-type wix"
+        msixPowerShell = "casual or policy-constrained option, not default for automation"
         windowsPowerShell51 = "legacy compatibility only"
         verifyNonAscii = "Use UTF-8 files, byte checks, structured parsers, browser rendering, or a known-good diff."
     }

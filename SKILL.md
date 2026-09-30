@@ -10,22 +10,22 @@ Use this skill as a guardrail whenever Windows, PowerShell, Codex tool execution
 ## Requirements
 
 - Use PowerShell 7.6.1 or newer for validation scripts and examples.
-- On Windows AI/CJK workflows, depend on the PowerShell 7 MSI installation when available. Prefer `winget install --id Microsoft.PowerShell --source winget --installer-type wix`, or the official `.msi` installer.
-- Invoke it as `pwsh`, preferably from `C:\Program Files\PowerShell\7\pwsh.exe`, not Windows PowerShell 5.1 (`powershell.exe`) and not a Microsoft Store / MSIX `WindowsApps` package for automation.
-- Strongly recommend PowerShell 7.6.1+ MSI for users who will run AI-generated PowerShell commands or process Chinese/CJK files on Windows.
-- Treat Microsoft Store / MSIX PowerShell as a casual or policy-constrained option, not the default runtime for Codex, automation, or cross-tool Chinese/CJK workflows.
+- For PowerShell 7.6 on Windows AI/CJK workflows, prefer the MSI installation when available: `winget install --id Microsoft.PowerShell --source winget --installer-type wix`, or the official `.msi` installer.
+- Invoke it as `pwsh`, preferably from `C:\Program Files\PowerShell\7\pwsh.exe` for a 7.6 MSI installation, not Windows PowerShell 5.1 (`powershell.exe`). Check the package path when using a later release.
+- Recommend the PowerShell 7.6 MSI for users who will run AI-generated PowerShell commands or process Chinese/CJK files on Windows. For later releases, use an officially supported package and check its automation limitations.
+- Treat Microsoft Store / MSIX PowerShell as a casual or policy-constrained option for 7.6; when it is the available package for a later release, check its path, profile, and remoting limitations before automation.
 - Treat Windows PowerShell 5.1 as a legacy compatibility target only, not the normal runtime for Chinese/CJK AI workflows.
 
 PowerShell 7.6.1 reduces many default encoding pitfalls by using UTF-8-oriented defaults, but it does not make terminal rendering, external tools, legacy Big5 files, or copy/paste workflows automatically safe.
 
-Plain `winget install --id Microsoft.PowerShell --source winget` may install MSIX on current Windows releases. When this skill asks for PowerShell 7 on Windows, specify `--installer-type wix` unless the user or organization intentionally requires MSIX.
+Plain `winget install --id Microsoft.PowerShell --source winget` installs MSIX by default for PowerShell 7.6. Use `--installer-type wix` only for a release that still provides MSI. Microsoft states that PowerShell 7.7 will not provide MSI; check the current official installation options before recommending an upgrade.
 
 ## Runtime Split
 
 Before diagnosing or writing localized text, identify the environment:
 
-- PowerShell 7.6.1+ MSI: recommended Windows-native route for AI/CJK work. It normally lives under `C:\Program Files\PowerShell\7`, has fewer app-container surprises, and is the default target for this skill.
-- PowerShell 7.6.1+ MSIX / Store: UTF-8 behavior is still PowerShell 7, but the packaged-app environment can affect paths, profiles, all-users settings, remoting, and automation assumptions. Use only when MSI is unavailable or policy requires it.
+- PowerShell 7.6 MSI: recommended Windows-native route for AI/CJK work on 7.6. It normally lives under `C:\Program Files\PowerShell\7` and has fewer app-container surprises.
+- PowerShell 7.6 MSIX / Store: UTF-8 behavior is still PowerShell 7, but the packaged-app environment can affect paths, profiles, all-users settings, remoting, and automation assumptions. For later releases, check which packages are offered and test these limits.
 - Windows PowerShell 5.1: legacy route. Default `Set-Content`, `Out-File`, redirection, and native-command boundaries can use different encodings. Avoid it for normal Chinese/CJK file workflows.
 - Git Bash: often UTF-8-friendly, but Windows-native tools launched through it can still cross back into Windows code page behavior.
 - WSL: usually the cleanest UTF-8 route, but crossing into Windows paths or Windows executables reintroduces Windows encoding boundaries.
@@ -36,13 +36,13 @@ Before diagnosing or writing localized text, identify the environment:
 - Do not use terminal-rendered Chinese/CJK text as the final source of truth.
 - Verify non-ASCII text through UTF-8 files, browser/page rendering, screenshots, structured parser output, or `git diff`.
 - Check `$PSVersionTable.PSVersion`, `$PSHOME`, `(Get-Command pwsh).Source`, `[Console]::InputEncoding`, and `[Console]::OutputEncoding` when a task involves shell I/O, native commands, or diagnosing mojibake.
-- Keep `.ps1` source files ASCII-only when practical.
-- Do not put raw Chinese/CJK literals into PowerShell inline scripts, heredocs, generated `.ps1` files, or shell redirections.
+- Keep `.ps1` source files ASCII-only when practical. This repository enforces that as a conservative portability policy, not because PowerShell 7 cannot run UTF-8 scripts containing CJK text.
+- In this repository, avoid raw Chinese/CJK literals in PowerShell inline scripts, heredocs, and generated `.ps1` files. In other projects, follow their source policy and verify the encoding boundary.
 - Put non-ASCII content in UTF-8 data files, or encode it in an ASCII-safe form such as Base64 or `\uXXXX` escapes and decode at runtime.
 - When reading or writing text files from scripts, specify UTF-8 explicitly.
 - Avoid relying on default `>`, `>>`, `Out-File`, `Set-Content`, and `Add-Content` behavior for non-ASCII text unless the PowerShell version is known, the encoding is explicit where needed, and the result is verified.
 - For cross-version BOM-less UTF-8 writes, prefer a runtime/API that can specify UTF-8 without BOM explicitly, such as `[System.IO.File]::WriteAllText($path, $text, [System.Text.UTF8Encoding]::new($false))`.
-- If a terminal shows `???`, replacement characters, or mojibake, stop before saving, publishing, or committing any affected text.
+- If a terminal shows `???`, replacement characters, or mojibake, check the underlying file bytes or Unicode text before saving, publishing, or committing affected text. A display problem alone does not prove the file is damaged.
 
 ## Preferred Patterns
 
@@ -74,7 +74,7 @@ If this skill includes `scripts/diagnose-powershell-encoding.ps1`, run it before
 pwsh -NoProfile -File .\scripts\diagnose-powershell-encoding.ps1
 ```
 
-If this skill includes `scripts/assert-no-nonascii-ps1.ps1`, run it from the project root before finishing PowerShell changes. Use the script from the skill directory, or copy it into the target project first:
+This repository enforces ASCII-only PowerShell source. Run `scripts/assert-no-nonascii-ps1.ps1` from this repository root before finishing PowerShell changes. In another project, use it only if that project adopts the same policy:
 
 ```powershell
 pwsh -NoProfile -File .\scripts\assert-no-nonascii-ps1.ps1

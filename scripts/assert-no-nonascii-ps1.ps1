@@ -38,7 +38,7 @@ foreach ($root in $Path) {
 }
 
 if ($failed.Count -gt 0) {
-    Write-Host "Non-ASCII bytes found in checked shell source files:" -ForegroundColor Red
+    Write-Host "This repository's ASCII-only PowerShell source policy failed:" -ForegroundColor Red
     foreach ($file in $failed) {
         Write-Host "  $file" -ForegroundColor Red
     }

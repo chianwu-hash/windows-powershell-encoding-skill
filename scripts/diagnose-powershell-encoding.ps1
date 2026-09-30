@@ -117,8 +117,8 @@ $diagnostic = [ordered]@{
     }
     fileWriteTest = Test-FileWriteEncoding
     guidance = [ordered]@{
-        recommendedShell = "PowerShell 7.6.1+ MSI via winget --installer-type wix"
-        msixPowerShell = "casual or policy-constrained option, not default for automation"
+        recommendedShell = "PowerShell 7.6.1+; prefer MSI for 7.6 and check official packaging for later releases"
+        msixPowerShell = "check path, profile, and remoting limitations before automation"
         windowsPowerShell51 = "legacy compatibility only"
         verifyNonAscii = "Use UTF-8 files, byte checks, structured parsers, browser rendering, or a known-good diff."
     }
